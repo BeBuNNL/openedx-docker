@@ -11,7 +11,8 @@ defaults: &defaults # We use the machine executor, i.e. a VM, not a container
     # specific version of the cache. See documentation for details)
     docker_layer_caching: true
 
-  working_directory: ~/fun
+#  working_directory: ~/fun
+  working_directory: ~/
 
 build_steps: &build_steps
   steps:

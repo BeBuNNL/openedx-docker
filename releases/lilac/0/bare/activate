@@ -1,0 +1,4 @@
+export EDX_RELEASE="lilac.0"
+export FLAVOR="bare"
+export EDX_RELEASE_REF="release-2021-09-30-16.02"
+export EDX_DEMO_RELEASE_REF="master"

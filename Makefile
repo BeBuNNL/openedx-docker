@@ -192,12 +192,12 @@ clean-db:  ## Remove mongo, mysql & redis databases
 create-symlinks: \
   check-activate \
   check-root-user
-create-symlinks:  ## create symlinks to local configuration (mounted via a volume)
+create-symlinks:  ## create symlinks to local configuration (mounted via a volume), lms-cms/envs/fun
 	$(COMPOSE_RUN) --no-deps lms-dev bash -c "\
-	  rm -f /edx/app/edxapp/edx-platform/lms/envs/fun && \
-	  rm -f /edx/app/edxapp/edx-platform/cms/envs/fun && \
-	  ln -sf /config/lms /edx/app/edxapp/edx-platform/lms/envs/fun && \
-	  ln -sf /config/cms /edx/app/edxapp/edx-platform/cms/envs/fun && \
+	  rm -f /edx/app/edxapp/edx-platform/lms/envs && \
+	  rm -f /edx/app/edxapp/edx-platform/cms/envs && \
+	  ln -sf /config/lms /edx/app/edxapp/edx-platform/lms/envs && \
+	  ln -sf /config/cms /edx/app/edxapp/edx-platform/cms/envs && \
 	  ln -sf /config/lms/root_urls.py /edx/app/edxapp/edx-platform/lms/ && \
 	  ln -sf /config/cms/root_urls.py /edx/app/edxapp/edx-platform/cms/"
 .PHONY: create-symlinks
@@ -236,9 +236,9 @@ dev-assets: \
   create-symlinks \
   dev-install \
   dev-ui-toolkit
-dev-assets:  ## run update_assets to copy required statics in local volumes
+dev-assets:  ## run update_assets to copy required statics in local volumes, fun.docker
 	$(COMPOSE_RUN) --no-deps lms-dev \
-		paver update_assets --settings=fun.docker_build_development --skip-collect
+		paver update_assets --settings=docker_build_development --skip-collect
 .PHONY: dev-assets
 
 # Build development image. Note that the cms-dev service uses the same image
@@ -284,9 +284,9 @@ dev-watch: \
   check-activate \
   check-root-user \
   tree
-dev-watch:  ## Start assets watcher (front-end development)
+dev-watch:  ## Start assets watcher (front-end development), fun.docker
 	$(COMPOSE_EXEC) lms-dev \
-	  paver watch_assets --settings=fun.docker_build_development
+	  paver watch_assets --settings=docker_build_development
 .PHONY: dev-watch
 
 # You can force archive download with the -B option:

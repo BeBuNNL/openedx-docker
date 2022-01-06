@@ -21,7 +21,8 @@ services:
     # We use WiredTiger in all environments. In development environments we use small files
     # to conserve disk space, and disable the journal for a minor performance gain.
     # See https://docs.mongodb.com/v3.0/reference/program/mongod/#options for complete details.
-    command: mongod --smallfiles --nojournal --storageEngine wiredTiger
+    # --smallfiles
+    command: mongod --nojournal --storageEngine wiredTiger
 
   memcached:
     image: memcached:1.4
@@ -58,15 +59,16 @@ services:
       context: ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}
       target: production
       args:
-        EDX_RELEASE_REF: ${EDX_RELEASE_REF:-release-2018-08-29-14.14}
-        EDX_ARCHIVE_URL: ${EDX_ARCHIVE_URL:-https://github.com/edx/edx-platform/archive/release-2018-08-29-14.14.tar.gz}
+        EDX_RELEASE_REF: ${EDX_RELEASE_REF:-release-2021-09-30-16.02}
+        EDX_ARCHIVE_URL: ${EDX_ARCHIVE_URL:-https://github.com/edx/edx-platform/archive/release-2021-09-30-16.02.tar.gz}
     image: "${EDXAPP_IMAGE_NAME:-edxapp}:${EDXAPP_IMAGE_TAG:-master-bare}"
     env_file:
       - env.d/development
       - env.d/${REDIS_SERVICE:-redis}
     environment:
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.fun.docker_run
+      #DJANGO_SETTINGS_MODULE: lms.envs.fun.docker_run
+      DJANGO_SETTINGS_MODULE: lms.envs.docker_run
     volumes:
       - ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}/data/media:/edx/var/edxapp/media
       - ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}/data/store:/edx/app/edxapp/data
@@ -92,15 +94,16 @@ services:
       args:
         DOCKER_UID: ${DOCKER_UID}
         DOCKER_GID: ${DOCKER_GID}
-        EDX_RELEASE_REF: ${EDX_RELEASE_REF:-release-2018-08-29-14.14}
-        EDX_ARCHIVE_URL: ${EDX_ARCHIVE_URL:-https://github.com/edx/edx-platform/archive/release-2018-08-29-14.14.tar.gz}
+        EDX_RELEASE_REF: ${EDX_RELEASE_REF:-release-2021-09-30-16.02}
+        EDX_ARCHIVE_URL: ${EDX_ARCHIVE_URL:-https://github.com/edx/edx-platform/archive/release-2021-09-30-16.02.tar.gz}
     image: "${EDXAPP_IMAGE_NAME:-edxapp}:${EDXAPP_IMAGE_TAG:-master-bare}-dev"
     env_file:
       - env.d/development
       - env.d/${REDIS_SERVICE:-redis}
     environment:
       SERVICE_VARIANT: lms
-      DJANGO_SETTINGS_MODULE: lms.envs.fun.docker_run
+      #DJANGO_SETTINGS_MODULE: lms.envs.fun.docker_run
+      DJANGO_SETTINGS_MODULE: lms.envs.docker_run
     ports:
       - "8072:8000"
     volumes:
@@ -112,8 +115,9 @@ services:
       - ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}/config:/config
       # Add lines here to override source code in a Python module e.g.:
       #- ./src/edx-ora2/openassessment:/usr/local/lib/python2.7/dist-packages/openassessment
+      # python manage.py lms runserver 0.0.0.0:8000 --settings=fun.docker_run_development
     command: >
-      python manage.py lms runserver 0.0.0.0:8000 --settings=fun.docker_run_development
+      python manage.py lms runserver 0.0.0.0:8000 --settings=docker_run_development
     depends_on:
       - mailcatcher
       - mysql
@@ -128,7 +132,8 @@ services:
       - env.d/${REDIS_SERVICE:-redis}
     environment:
       SERVICE_VARIANT: cms
-      DJANGO_SETTINGS_MODULE: cms.envs.fun.docker_run
+      #DJANGO_SETTINGS_MODULE: cms.envs.fun.docker_run
+      DJANGO_SETTINGS_MODULE: cms.envs.docker_run
     volumes:
       - ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}/data/media:/edx/var/edxapp/media
       - ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}/data/store:/edx/app/edxapp/data
@@ -157,8 +162,9 @@ services:
       - ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}/config:/config
       # Add lines here to override source code in a Python module e.g.:
       #- ./src/edx-ora2/openassessment:/usr/local/lib/python2.7/dist-packages/openassessment
+      # python manage.py cms runserver 0.0.0.0:8000 --settings=fun.docker_run_development
     command: >
-      python manage.py cms runserver 0.0.0.0:8000 --settings=fun.docker_run_development
+      python manage.py cms runserver 0.0.0.0:8000 --settings=docker_run_development
     depends_on:
       - lms-dev
 
@@ -167,8 +173,8 @@ services:
       context: ./${FLAVORED_EDX_RELEASE_PATH:-releases/master/0/bare}
       target: nginx
       args:
-        EDX_RELEASE_REF: ${EDX_RELEASE_REF:-release-2018-08-29-14.14}
-        EDX_ARCHIVE_URL: ${EDX_ARCHIVE_URL:-https://github.com/edx/edx-platform/archive/release-2018-08-29-14.14.tar.gz}
+        EDX_RELEASE_REF: ${EDX_RELEASE_REF:-release-2021-09-30-16.02}
+        EDX_ARCHIVE_URL: ${EDX_ARCHIVE_URL:-https://github.com/edx/edx-platform/archive/release-2021-09-30-16.02.tar.gz}
     image: "${EDXAPP_NGINX_IMAGE_NAME:-edxapp-nginx}:${EDXAPP_IMAGE_TAG:-master-bare}"
     ports:
       - "8073:8073"

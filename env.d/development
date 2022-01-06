@@ -1,6 +1,6 @@
 # Django
 SERVICE_VARIANT=lms
-DJANGO_SETTINGS_MODULE=lms.envs.fun.docker_run
+DJANGO_SETTINGS_MODULE=lms.envs.docker_run
 ALLOWED_HOSTS=["*"]
 
 # Database
@@ -38,4 +38,4 @@ CORS_ORIGIN_ALLOW_ALL=true
 EDX_API_KEY=FakeEdXAPIKey
 
 # Richie synchronization
-COURSE_HOOKS=[{"url": "https://richie:8070/api/v1.0/course-runs-sync/", "secret": "shared secret", "verify": false}]
+#COURSE_HOOKS=[{"url": "https://richie:8070/api/v1.0/course-runs-sync/", "secret": "shared secret", "verify": false}]
