@@ -10,9 +10,7 @@ import platform
 from lms.envs.utils import Configuration
 from openedx.core.lib.derived import derive_settings
 from path import Path as path
-from xmodule.modulestore.modulestore_settings import (
-    convert_module_store_setting_if_needed
-)
+from xmodule.modulestore.modulestore_settings import convert_module_store_setting_if_needed
 
 from ..common import *
 

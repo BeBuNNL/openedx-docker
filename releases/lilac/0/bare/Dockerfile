@@ -20,11 +20,47 @@ ARG NGINX_IMAGE_TAG=1.21.5
 FROM ubuntu:focal as base
 
 # Configure locales & timezone
-RUN apt-get update && \
-    apt-get install -y gettext locales tzdata && \
-    rm -rf /var/lib/apt/lists/*
-RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
-    locale-gen
+RUN apt-get update &&\
+    # Global requirements
+    DEBIAN_FRONTEND=noninteractive apt-get install -y \
+    build-essential \
+    curl \
+    git \
+    git-core \
+    language-pack-en \
+    libfreetype6-dev \
+    libmysqlclient-dev \
+    libssl-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libxslt1-dev \
+    swig \
+    # OpenedX requirements
+    gettext \
+    gfortran \
+    graphviz \
+    graphviz-dev \
+    libffi-dev \
+    libgeos-dev \
+    libgraphviz-dev \
+    libjpeg8-dev \
+    liblapack-dev \
+    libpng-dev \
+    libsqlite3-dev \
+    locales \
+    lynx \
+    ntp \
+    pkg-config \
+    python3-dev \
+    python3-venv \
+    rdfind \
+    apt-transport-https \
+    gnupg \
+    && rm -rf /var/lib/apt/lists/*
+
+#RUN sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen && \
+#    locale-gen
+RUN locale-gen en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
 ENV LC_ALL en_US.UTF-8
@@ -35,8 +71,8 @@ FROM base as downloads
 WORKDIR /downloads
 
 # Install curl
-RUN apt-get update &&\
-    apt-get install -y curl
+#RUN apt-get update &&\
+#    apt-get install -y curl
 
 # Download pip installer for python 3.8
 RUN curl -sSL https://bootstrap.pypa.io/get-pip.py -o get-pip.py
@@ -51,19 +87,19 @@ RUN curl -sLo edxapp.tgz https://github.com/edx/edx-platform/archive/$EDX_RELEAS
 FROM base as edxapp
 
 # Install apt https support (required to use node sources repository)
-RUN apt-get update &&\
-    apt-get upgrade -y &&\
-    apt-get install -y apt-transport-https
+#RUN apt-get update &&\
+#    apt-get upgrade -y &&\
+#    apt-get install -y apt-transport-https gnupg
 
 # Add a recent release of nodejs to apt sources (ubuntu package for precise is
 # broken)
 RUN echo "deb https://deb.nodesource.com/node_12.x focal main" \
 	> /etc/apt/sources.list.d/nodesource.list && \
-    curl -s 'https://deb.nodesource.com/gpgkey/nodesource.gpg.key' | apt-key add -
+    curl -fsSL 'https://deb.nodesource.com/gpgkey/nodesource.gpg.key' | apt-key add -
 
 # Install base system dependencies
 RUN apt-get update &&\
-    apt-get install -y nodejs python3.8 &&\
+    apt-get install -y nodejs &&\
     rm -rf /var/lib/apt/lists/*
 
 WORKDIR /edx/app/edxapp/edx-platform
@@ -75,15 +111,15 @@ COPY --from=downloads /downloads/edx-platform-* .
 # We copy default configuration files to "/config" and we point to them via
 # symlinks. That allows to easily override default configurations by mounting a
 # docker volume.
-COPY ./config /config
+#COPY ./config /config
 #RUN ln -sf /config/lms /edx/app/edxapp/edx-platform/lms/envs/fun && \
 #    ln -sf /config/cms /edx/app/edxapp/edx-platform/cms/envs/fun
-RUN ln -sf /config/lms /edx/app/edxapp/edx-platform/lms/envs && \
-    ln -sf /config/cms /edx/app/edxapp/edx-platform/cms/envs
+#RUN ln -sf /config/lms /edx/app/edxapp/edx-platform/lms/envs && \
+#    ln -sf /config/cms /edx/app/edxapp/edx-platform/cms/envs
 
 # Add node_modules/.bin to the PATH so that paver-related commands can execute
 # node scripts
-ENV PATH="/edx/app/edxapp/edx-platform/node_modules/.bin:${PATH}"
+#ENV PATH="/edx/app/edxapp/edx-platform/node_modules/.bin:${PATH}"
 
 # === BUILDER ===
 FROM edxapp as builder
@@ -91,35 +127,38 @@ FROM edxapp as builder
 WORKDIR /builder
 
 # Install builder system dependencies
-RUN apt-get update && \
-    apt-get upgrade -y && \
-    apt-get install -y build-essential gettext git graphviz-dev libgeos-dev libmysqlclient-dev libxml2-dev libxmlsec1-dev python-dev rdfind && \
-    rm -rf /var/lib/apt/lists/*
+#RUN apt-get update && \
+#    apt-get upgrade -y && \
+#    apt-get install -y build-essential gettext git graphviz-dev libffi-dev libfreetype6-dev libgeos-dev libjpeg8-dev liblapack-dev libmysqlclient-dev libpng-dev libsqlite3-dev libxml2-dev libxmlsec1-dev lynx python3-dev ntp pkg-config rdfind && \
+#    rm -rf /var/lib/apt/lists/*
 
 # Install the latest pip release
 COPY --from=downloads /downloads/get-pip.py ./get-pip.py
-RUN python get-pip.py
+RUN python3.8 get-pip.py
 
-WORKDIR /edx/app/edxapp/edx-platform
+WORKDIR /edx/app/edxapp/edx-platform/
 
 # Patches
-COPY patches/* /tmp/
+#COPY patches/* /tmp/
 
 # Patches pre-install
 # Patch requirements to install py2neo==3.1.2 from github as this version has been removed from pypi.org
-RUN patch -p1 < /tmp/edx-platform_master.0-bare_requirements-py2neo.patch
+#RUN patch -p1 < /tmp/edx-platform_master.0-bare_requirements-py2neo.patch
 
 # Install python dependencies
-RUN pip install --src /usr/local/src -r requirements/edx/base.txt
-RUN pip install gunicorn==19.9.0
+RUN pip install -r requirements/pip.txt
+RUN pip install -r requirements/edx/base.txt
+RUN pip install -r requirements/edx/development.txt
+RUN pip install gunicorn==20.1.0
 
 # Install Javascript requirements
-RUN npm install
+RUN npm set progress=false && npm install
 
 # Update assets skipping collectstatic (it should be done during deployment)
-RUN NO_PREREQ_INSTALL=1 \
+#RUN paver update_assets --settings production --skip-collect
+RUN NO_PREREQ_INSTALL=1 paver update_assets --settings=production --skip-collect
     #paver update_assets --settings=fun.docker_build_production --skip-collect
-    paver update_assets --settings=docker_build_production --skip-collect
+    
 
 # === STATIC LINKS COLLECTOR ===
 FROM builder as links_collector
@@ -128,8 +167,8 @@ ARG EDXAPP_STATIC_ROOT
 
 #RUN python manage.py lms collectstatic --link --noinput --settings=fun.docker_run && \
 #    python manage.py cms collectstatic --link --noinput --settings=fun.docker_run
-RUN python manage.py lms collectstatic --link --noinput --settings=docker_run && \
-    python manage.py cms collectstatic --link --noinput --settings=docker_run
+RUN python manage.py lms collectstatic --link --noinput --settings production && \
+    python manage.py cms collectstatic --link --noinput --settings production
 
 # Replace duplicated file by a symlink to decrease the overall size of the
 # final image
@@ -142,8 +181,8 @@ ARG EDXAPP_STATIC_ROOT
 
 #RUN python manage.py lms collectstatic --noinput --settings=fun.docker_run && \
 #    python manage.py cms collectstatic --noinput --settings=fun.docker_run
-RUN python manage.py lms collectstatic --noinput --settings=docker_run && \
-    python manage.py cms collectstatic --noinput --settings=docker_run
+RUN python manage.py lms collectstatic --noinput --settings production && \
+    python manage.py cms collectstatic --noinput --settings roduction
 
 # Replace duplicated file by a symlink to decrease the overall size of the
 # final image
@@ -196,7 +235,7 @@ COPY ./entrypoint.sh /usr/local/bin/entrypoint.sh
 USER ${DOCKER_UID}:${DOCKER_GID}
 
 # Create the virtualenv with a non-priviledged user
-RUN virtualenv -p python2.7 --system-site-packages /edx/app/edxapp/venv
+RUN virtualenv -p python3.8 --system-site-packages /edx/app/edxapp/venv
 
 # Install development dependencies in a virtualenv
 RUN bash -c "source /edx/app/edxapp/venv/bin/activate && \
